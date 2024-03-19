@@ -1,124 +1,83 @@
 package com.ServiceProviderPlatform.Service_Provider_Platform_API.model;
 
-import com.ServiceProviderPlatform.Service_Provider_Platform_API.enums.Gender;
+import com.ServiceProviderPlatform.Service_Provider_Platform_API.enums.ActiveStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "user")
-public class User {
+public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
-    private String firstName;
-    private String lastName;
-    @ManyToOne
-    @JoinColumn(name = "address_id")
-    private Address address;
-    private LocalDateTime birthday;
-    private Gender gender;
-    private String Language;
-    @OneToOne(mappedBy = "user")
-    private Trainer trainer;
-    @OneToOne(mappedBy = "user")
-    private Client client;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public User() {
+    private String email;
+    private ActiveStatus status;
+    private String password;
+
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+    private Member member;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
+    private List<UserRole> userRoles = new ArrayList<>();
+
+    public User(String email, ActiveStatus status, String password, List<UserRole> userRoles) {
+        this.email = email;
+        this.status = status;
+        this.password = password;
+        this.userRoles = userRoles;
     }
 
-    public User(long id, String firstName, String lastName, Address address, LocalDateTime birthday, Gender gender, String language, Trainer trainer, Client client) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.address = address;
-        this.birthday = birthday;
-        this.gender = gender;
-        Language = language;
-        this.trainer = trainer;
-        this.client = client;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return userRoles.stream().map(userRole -> new SimpleGrantedAuthority(userRole.getName().name())).toList();
     }
 
-    public User(String firstName, String lastName, Address address, LocalDateTime birthday, Gender gender, String language, Trainer trainer, Client client) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.address = address;
-        this.birthday = birthday;
-        this.gender = gender;
-        Language = language;
-        this.trainer = trainer;
-        this.client = client;
+    @Override
+    public String getPassword() {
+        return password;
     }
 
-    public long getId() {
-        return id;
+    @Override
+    public String getUsername() {
+        return email;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
     }
 
-    public String getFirstName() {
-        return firstName;
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
     }
 
-    public String getLastName() {
-        return lastName;
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public LocalDateTime getBirthday() {
-        return birthday;
-    }
-
-    public void setBirthday(LocalDateTime birthday) {
-        this.birthday = birthday;
-    }
-
-    public Gender getGender() {
-        return gender;
-    }
-
-    public void setGender(Gender gender) {
-        this.gender = gender;
-    }
-
-    public String getLanguage() {
-        return Language;
-    }
-
-    public void setLanguage(String language) {
-        Language = language;
-    }
-
-    public Trainer getTrainer() {
-        return trainer;
-    }
-
-    public void setTrainer(Trainer trainer) {
-        this.trainer = trainer;
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
 }
