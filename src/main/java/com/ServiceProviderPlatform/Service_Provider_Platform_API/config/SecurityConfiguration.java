@@ -1,5 +1,6 @@
 package com.ServiceProviderPlatform.Service_Provider_Platform_API.config;
 
+import com.ServiceProviderPlatform.Service_Provider_Platform_API.enums.ApplicationRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,9 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/member/**").hasAuthority(ApplicationRole.CLIENT.name())
+                        .requestMatchers("/api/v1/service/create-service/{id}").hasAuthority(ApplicationRole.TRAINER.name())
+                        .requestMatchers("/api/v1/service/filter-services").hasAuthority(ApplicationRole.CLIENT.name())
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
